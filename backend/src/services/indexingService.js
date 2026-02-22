@@ -3,6 +3,9 @@ const priceService = require('./priceService');
 const slackWebhookService = require('./slackWebhookService');
 const tvlService = require('./tvlService');
 
+const EventEmitter = require('events');
+const claimEventEmitter = new EventEmitter();
+
 class IndexingService {
   async processClaim(claimData) {
     try {
@@ -50,6 +53,8 @@ class IndexingService {
         // Don't throw - TVL update failure shouldn't fail claim processing
       }
       
+      // Emit internal claim event for WebSocket gateway
+      claimEventEmitter.emit('claim', claim.toJSON());
       return claim;
     } catch (error) {
       console.error('Error processing claim:', error);
@@ -293,4 +298,8 @@ class IndexingService {
   }
 }
 
-module.exports = new IndexingService();
+module.exports = {
+  IndexingService,
+  claimEventEmitter,
+  instance: new IndexingService()
+};
